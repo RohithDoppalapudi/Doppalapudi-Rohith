@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>✨ Flashcard Viewer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet"/>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: 'Quicksand', sans-serif;
+      overflow: hidden;
+      background: radial-gradient(circle at 20% 20%, #74ebd5, #acb6e5);
+      animation: backgroundPulse 15s ease infinite;
+      transition: background 1s ease;
+    }
+
+    body.dark-mode {
+      background: radial-gradient(circle at 20% 20%, #434343, #000000);
+    }
+
+    @keyframes backgroundPulse {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    h1 {
+      color: #fff;
+      font-weight: 700;
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+      animation: slideDown 1s ease forwards;
+    }
+
+    @keyframes slideDown {
+      0% { opacity: 0; transform: translateY(-30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .flashcard-container {
+      width: 350px;
+      height: 230px;
+      perspective: 1200px;
+      margin-top: 30px;
+      animation: fadeIn 2s ease;
+    }
+
+    .flashcard {
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 1s ease-in-out;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      border-radius: 20px;
+    }
+
+    .flashcard.flip {
+      transform: rotateY(180deg);
+    }
+
+    .front, .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.3rem;
+      font-weight: 600;
+      border-radius: 20px;
+      padding: 25px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .front {
+      background: linear-gradient(135deg, #f8b500, #fceabb);
+      color: #333;
+    }
+
+    .back {
+      background: linear-gradient(135deg, #8ec5fc, #e0c3fc);
+      color: #2d3436;
+      transform: rotateY(180deg);
+    }
+
+    .btn-group button, #theme-toggle {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-weight: bold;
+    }
+
+    .btn-group button:hover, #theme-toggle:hover {
+      transform: scale(1.1);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+
+    #progress {
+      color: #fff;
+      margin-top: 20px;
+      font-size: 1.1rem;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    #next-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      transition: transform 0.3s ease;
+    }
+
+    #next-btn:hover {
+      transform: scale(1.1) rotate(10deg);
+      background-color: #f8b500;
+      color: #fff;
+    }
+
+    #theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-weight: bold;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <button id="theme-toggle" onclick="toggleTheme()">🌙 Theme</button>
+
+  <div class="container d-flex flex-column align-items-center justify-content-center min-vh-100">
+    <h1> Flashcard Viewer</h1>
+    <div class="flashcard-container" onclick="flipCard()">
+      <div class="flashcard" id="flashcard">
+        <div class="front" id="card-front">Question</div>
+        <div class="back" id="card-back">Answer</div>
+      </div>
+    </div>
+    <div class="btn-group mt-4">
+      <button class="btn btn-outline-light btn-lg mx-2" onclick="markKnown()">✅ Know</button>
+      <button class="btn btn-outline-dark btn-lg mx-2" onclick="markUnknown()">❌ Don’t Know</button>
+    </div>
+    <p id="progress">Card 1 of X</p>
+  </div>
+
+  <button id="next-btn" onclick="nextCard()">➡</button>
+
+  <script>
+    const cards = [
+      { question: "What is the capital of France?", answer: "Paris" },
+      { question: "What is 9 + 10?", answer: "19" },
+      { question: "What does HTML stand for?", answer: "HyperText Markup Language" },
+    ];
+
+    let currentCard = 0;
+
+    function showCard(index) {
+      document.getElementById("card-front").innerText = cards[index].question;
+      document.getElementById("card-back").innerText = cards[index].answer;
+      document.getElementById("flashcard").classList.remove("flip");
+      document.getElementById("progress").innerText = `Card ${index + 1} of ${cards.length}`;
+    }
+
+    function flipCard() {
+      document.getElementById("flashcard").classList.toggle("flip");
+    }
+
+    function markKnown() {
+      // Flip to show the answer
+      document.getElementById("flashcard").classList.add("flip");
+      // After 5 seconds, flip back to show the question
+      setTimeout(() => {
+        document.getElementById("flashcard").classList.remove("flip");
+      }, 3000);
+    }
+
+    function markUnknown() {
+      // Flip to show the answer
+      document.getElementById("flashcard").classList.add("flip");
+      // After 5 seconds, flip back to show the question
+      setTimeout(() => {
+        document.getElementById("flashcard").classList.remove("flip");
+      }, 3000);
+    }
+
+    function nextCard() {
+      currentCard = (currentCard + 1) % cards.length;
+      showCard(currentCard);
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+    }
+
+    showCard(currentCard);
+  </script>
+</body>
+</html>
