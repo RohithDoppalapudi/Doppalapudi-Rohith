@@ -183,18 +183,14 @@
     }
 
     function markKnown() {
-      // Flip to show the answer
       document.getElementById("flashcard").classList.add("flip");
-      // After 5 seconds, flip back to show the question
       setTimeout(() => {
         document.getElementById("flashcard").classList.remove("flip");
       }, 3000);
     }
 
     function markUnknown() {
-      // Flip to show the answer
       document.getElementById("flashcard").classList.add("flip");
-      // After 5 seconds, flip back to show the question
       setTimeout(() => {
         document.getElementById("flashcard").classList.remove("flip");
       }, 3000);
